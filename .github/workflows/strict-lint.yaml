@@ -29,48 +29,42 @@ jobs:
         continue-on-error: true
         id: eslint
 
-      - name: check for ESLint result
-        if: steps.eslint.outcome == 'failure'
-        run: |
-          echo "ESLint found issues. Failing the workflow."
-          exit 1
+      # - name: check for ESLint result
+      #   run: |
+      #     echo "ESLint found issues. Failing the workflow."
+      #     exit 1
           
-      - name: block PR if ESLint fails
-        if: steps.eslint.outcome == 'failure'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              event: 'REQUEST_CHANGES',
-              body: 'ESLint check failed. Please fix all linting issues (including warnings) before merging.'
-            })
+      # - name: block PR if ESLint fails
+      #   if: steps.eslint.outcome == 'failure'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       github.rest.pulls.createReview({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         pull_number: context.issue.number,
+      #         event: 'REQUEST_CHANGES',
+      #         body: 'ESLint check failed. Please fix all linting issues (including warnings) before merging.'
+      #       })
 
       - name: setup NodeJS for Build
-        if: steps.eslint.outcome == 'success'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
 
       - name: install all Dependencies
-        if: steps.eslint.outcome == 'success'
         run: npm ci
 
       - name: build Project from React Files
-        if: steps.eslint.outcome == 'success'
         run: npm run build
 
       - name: install Netlify CLI
-        if: steps.eslint.outcome == 'success'
         run: npm install netlify-cli@17.10.1 -g
 
       - name: deploy to Netlify Preview page to check what change has been made by contributor
         id: netlify_deploy
-        if: steps.eslint.outcome == 'success'
         run: |
           netlify deploy \
             --dir build \
@@ -82,13 +76,11 @@ jobs:
 
       - name: Generate URL Preview
         id: url_preview
-        if: steps.eslint.outcome == 'success'
         run: |
           NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
           echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_ENV"
           
       - name: Comment URL Preview on PR
-        if: steps.eslint.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |

@@ -32,7 +32,7 @@ jobs:
       # - name: check for ESLint result
       #   run: |
       #     echo "ESLint found issues. Failing the workflow."
-      #     exit 1
+      #     exit 1 
           
       # - name: block PR if ESLint fails
       #   if: steps.eslint.outcome == 'failure'

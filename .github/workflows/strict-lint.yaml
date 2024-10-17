@@ -41,7 +41,7 @@ jobs:
         if: steps.eslint.outcome == 'failure'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.VAI }}
           script: |
             github.rest.pulls.createReview({
               owner: context.repo.owner,

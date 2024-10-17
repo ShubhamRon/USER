@@ -1,11 +1,12 @@
 name: ESLint Check
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
 
-permissions: 
+permissions:
   pull-requests: write
 
 jobs: 
@@ -74,11 +75,12 @@ jobs:
             --site ${{ secrets.SITEID }} \
             --auth ${{ secrets.TOKEN }} \
             --json \
-            --alias "healthcare-${{ github.actor }}" \
+            --alias "userinterface-${{ github.actor }}" \
             > deploy_output.json
 
       - name: Generate URL Preview
         id: url_preview
+        if: steps.eslint.outcome == 'success'
         run: |
           NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
           echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_ENV"
@@ -88,8 +90,8 @@ jobs:
         with:
           script: |
             const previewUrl = process.env.NETLIFY_PREVIEW_URL;
-            const issue_number = context.issue.number; // Directly get the PR number
-            const username = context.actor; // Get the username of the person who raised the PR
+            const issue_number = context.issue.number;
+            const username = context.actor;
             if (previewUrl) {
               await github.rest.issues.createComment({
                 issue_number: issue_number,

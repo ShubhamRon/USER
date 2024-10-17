@@ -7,7 +7,7 @@ on:
 
 permissions: 
   pull-requests: write
-
+ 
 jobs: 
   lint-and-deploy:
     name: Run ESLint and Deploy Preview for the request made by contributor

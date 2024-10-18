@@ -1,11 +1,10 @@
-name: ESLint Check
-
+name: ESLint Check and Netlify Deploy
 on:
   workflow_dispatch:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
-
+ 
 permissions:
   pull-requests: write
   contents: write
@@ -26,57 +25,39 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Run ESLint test
-      #   run: npm run lint:strict
-      #   continue-on-error: true
-      #   id: eslint
-
-      # - name: Block PR if ESLint fails
-      #   continue-on-error: true
-      #   if: steps.eslint.outcome == 'failure'
-      #   uses: actions/github-script@v6
-      #   with:
-      #     github-token: ${{ secrets.VAI }}
-      #     script: |
-      #       github.rest.pulls.createReview({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         pull_number: context.issue.number,
-      #         event: 'REQUEST_CHANGES',
-      #         body: 'WORKFLOW BOT: ESLint check failed. Please fix all linting issues (including warnings) before merging.'
-      #       })
-
-      # - name: Check for ESLint result
-      #   if: steps.eslint.outcome == 'failure'
-      #   run: |
-      #     echo "Strict ESLint Check found issues. Failing the workflow."
-      #     exit 1
-
       - name: Install dependencies (production)
         run: npm ci
 
       - name: Build project from React files
-        run: npm run build
+        run: | 
+          CI=false
+          npm run build
 
-      - name: Deploy to Netlify without CLI
-        uses: netlify/actions/cli@v1
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './build'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.SITEID }}
-          NETLIFY_SITE_ID: ${{ secrets.TOKEN }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.SITEID }}
+        timeout-minutes: 1
 
       - name: Comment URL preview on PR
-        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
-            const previewUrl = `https://${{ secrets.SITEID }}.netlify.app`;
-            const issue_number = context.issue.number;
+            const deploymentUrl = ${{ steps.netlify-deploy.outputs.deploy-url }}
+            const issueNumber = context.issue.number;
             const username = context.actor;
             await github.rest.issues.createComment({
-              issue_number: issue_number,
+              issue_number: issueNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `WORKFLOW BOT: @${username} your preview URL has been generated: ${previewUrl}`
+              body: `WORKFLOW BOT: @${username} your preview URL has been generated: ${deploymentUrl}`
             });

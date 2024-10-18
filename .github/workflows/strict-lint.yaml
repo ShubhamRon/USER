@@ -9,7 +9,7 @@ on:
 permissions:
   pull-requests: write
   contents: write
-
+ 
 jobs: 
   lint-and-deploy:
     name: Run ESLint check and deploy Preview

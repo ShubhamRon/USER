@@ -79,8 +79,8 @@ jobs:
           enable-github-deployment: false
           alias: deploy-preview-${{ github.event.number }}
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.SITEID }}
-          NETLIFY_SITE_ID: ${{ secrets.TOKEN }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.SITEID }}
         timeout-minutes: 1
           
       # - name: Comment URL preview on PR

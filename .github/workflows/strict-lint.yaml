@@ -11,7 +11,7 @@ permissions:
   contents: write
  
 jobs: 
-  lint-and-deploy:
+  lint-and-deploy: 
     name: Run ESLint check and deploy Preview
     runs-on: ubuntu-latest
     steps:

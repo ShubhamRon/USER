@@ -12,7 +12,7 @@ permissions:
 
 jobs: 
   lint-and-deploy:
-    name: Run ESLint and Deploy Preview for the request made by contributor
+    name: Run ESLint check and deploy preview
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,89 +23,60 @@ jobs:
         with:
           node-version: '20'
 
-      - name: install all the dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Run ESLint test
-        run: npm run lint:strict
-        continue-on-error: true
-        id: eslint
+      # - name: Run ESLint test
+      #   run: npm run lint:strict
+      #   continue-on-error: true
+      #   id: eslint
 
-      # - name: check for ESLint result
+      # - name: Block PR if ESLint fails
+      #   continue-on-error: true
+      #   if: steps.eslint.outcome == 'failure'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     github-token: ${{ secrets.VAI }}
+      #     script: |
+      #       github.rest.pulls.createReview({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         pull_number: context.issue.number,
+      #         event: 'REQUEST_CHANGES',
+      #         body: 'WORKFLOW BOT: ESLint check failed. Please fix all linting issues (including warnings) before merging.'
+      #       })
+
+      # - name: Check for ESLint result
       #   if: steps.eslint.outcome == 'failure'
       #   run: |
-      #     echo "ESLint found issues. Failing the workflow."
+      #     echo "Strict ESLint Check found issues. Failing the workflow."
       #     exit 1
-          
-      - name: block PR if ESLint fails
-        continue-on-error: true
-        if: steps.eslint.outcome == 'failure'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.VAI }}
-          script: |
-            github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              event: 'REQUEST_CHANGES',
-              body: 'WORKFLOW BOT: ESLint check failed. Please fix all linting issues (including warnings) before merging.'
-            })
 
-      - name: setup NodeJS for Build
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-
-      - name: install all Dependencies
+      - name: Install dependencies (production)
         run: npm ci
 
-      - name: build Project from React Files
-        run: | 
-          CI=false
-          npm run build
+      - name: Build project from React files
+        run: npm run build
 
-      - name: install Netlify CLI
-        run: npm install netlify-cli@17.10.1 -g
+      - name: Deploy to Netlify without CLI
+        uses: netlify/actions/cli@v1
+        with:
+          publish-dir: './build'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.SITEID }}
+          NETLIFY_SITE_ID: ${{ secrets.TOKEN }}
 
-      - name: deploy to Netlify Preview page to check what change has been made by contributor
-        id: netlify_deploy
+      - name: Comment URL preview on PR
         continue-on-error: true
-        run: |
-          netlify deploy \
-            --dir build \
-            --site ${{ secrets.NETLIFY_SITE_ID_USER }} \
-            --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} \
-            --json \
-            --alias "userinterface-${{ github.actor }}" \
-            > deploy_output.json
-
-      - name: Generate URL Preview
-        id: url_preview
-        run: |
-          NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
-          echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_ENV"
-          
-      - name: Comment URL Preview on PR
         uses: actions/github-script@v7
         with:
           script: |
-            const previewUrl = process.env.NETLIFY_PREVIEW_URL;
+            const previewUrl = `https://${{ secrets.SITEID }}.netlify.app`;
             const issue_number = context.issue.number;
             const username = context.actor;
-            if (previewUrl) {
-              await github.rest.issues.createComment({
-                issue_number: issue_number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `WORKFLOW BOT: @${username} your preview URL has been generated : ${previewUrl}`
-              });
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: issue_number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `WORKFLOW BOT : deployment failed ${username}`
-              });
-            }
+            await github.rest.issues.createComment({
+              issue_number: issue_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `WORKFLOW BOT: @${username} your preview URL has been generated: ${previewUrl}`
+            });

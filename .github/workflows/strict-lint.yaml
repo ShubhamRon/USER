@@ -62,7 +62,7 @@ jobs:
       - name: deploy to netlify
         continue-on-error: true
         id: netlify-deploy
-        uses: nwtgck/actions-netlify@v2.0
+        uses: nwtgck/actions-netlify@v3.0
         with:
           publish-dir: './build'
           production-branch: main
@@ -70,7 +70,7 @@ jobs:
           deploy-message: "FROM GITHUB_ACTIONS"
           enable-pull-request-comment: true
           enable-commit-comment: false
-          overwrites-pull-request-comment: true
+          overwrites-pull-request-comment: false
           alias: deploy-preview-${{ github.event.number }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.TOKEN }}

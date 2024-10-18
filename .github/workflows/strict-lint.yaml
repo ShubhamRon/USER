@@ -36,7 +36,7 @@ jobs:
         if: steps.eslint.outcome == 'failure'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.VAI }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.pulls.createReview({
               owner: context.repo.owner,
@@ -68,7 +68,7 @@ jobs:
         with:
           publish-dir: './build'
           production-branch: main
-          github-token: ${{ secrets.VAI }}  # GITHUB_TOKEN and VAI throwing resource-inaccessible error
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # GITHUB_TOKEN and VAI throwing resource-inaccessible error
           deploy-message: "FROM GITHUB_ACTIONS"
           enable-pull-request-comment: true
           enable-commit-comment: false

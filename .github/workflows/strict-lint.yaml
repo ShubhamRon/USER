@@ -34,6 +34,7 @@ jobs:
           npm run build
 
       - name: Deploy to Netlify
+        id: netlify-deploy
         uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './build'

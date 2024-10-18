@@ -18,10 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: setup NodeJS for Build
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: "npm"
 
       - name: install all Dependencies
         run: npm ci
@@ -52,12 +53,6 @@ jobs:
         run: |
           echo "ESLint found issues. Failing the workflow."
           exit 1
-          
-      - name: setup NodeJS for Build
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
 
       - name: build Project from React Files
         run: |

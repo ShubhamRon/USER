@@ -14,7 +14,7 @@ jobs:
     name: Run ESLint check and deploy preview
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code 
         uses: actions/checkout@v3
 
       - name: Set up Node.js
